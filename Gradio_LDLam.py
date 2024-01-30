@@ -1,5 +1,3 @@
-# Changed from anaconda to virtualenv
-
 import gradio as gr
 import numpy as np
 from PIL import Image
@@ -8,10 +6,6 @@ from scipy.ndimage import median_filter
 from skimage.filters import threshold_multiotsu, threshold_otsu
 
 def basic_preprocessing(input_image, kernel_size):
-    """
-    Preprocessing: average, median filter, and histogram equalization with size and
-    shape of the mask should be selected.((kernel_size = 3 by default))
-    """
     # Convert the input image to grayscale
     gray_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2GRAY)
 
@@ -70,11 +64,6 @@ def otsu_segment(input_image):
     return binary
 
 def calculate_metrics(pred, mask):
-    '''
-    Input: image and corresponding mask after normalization [0, 255] -> [0, 1], for example
-    Output: metrics
-    '''
-
     # normalize eh_mask [0, 255] -> [0, 1]
     norm_mask = np.where(mask, 1, 0)
     # convert 3 channel to 1 channel
@@ -104,7 +93,7 @@ def calculate_metrics(pred, mask):
 
     return sensitivity, specificity, accuracy
 
-def main_function(img, kernel_sz, original_mask):
+def image_processing(img, original_mask, kernel_sz):
     # basic img information
     info = img.shape
 
@@ -124,25 +113,25 @@ def main_function(img, kernel_sz, original_mask):
 
     # metrics calculation
     sens, spec, acc = calculate_metrics(otsu_seg_mask, original_mask)
-    metric_overall = f'Otsu: {sens:.2f}, {spec:.2f}, {acc:.2f}'
+    metric_overall = f'Otsu metrics: \nSensitivity: {sens:.2f} \nSpecificity: {spec:.2f} \nAccurarcy: {acc:.2f}'
 
     return info, average_img, median_img, hist_equ_img, psnr, kapur_img, otsu_img, metric_overall
 
 inputs = [
     gr.Image(type='numpy', label="Input original image"),
-    gr.Number(label='kernel size (average and median filter only)', value=3),
     gr.Image(type='numpy', label="Input original mask"),
+    gr.Number(label='Kernel size (for average and median filter only)', value=3),
 ]
 outputs = [
     gr.Textbox(label="Shape"),  # img info
-    gr.Image(label="avg filtering"),  # avg filtering
-    gr.Image(label="median filtering"),  # median filtering
-    gr.Image(label="histogram equalized img"),  # histogram equalizing
+    gr.Image(label="Average filtering"),  # avg filtering
+    gr.Image(label="Median filtering"),  # median filtering
+    gr.Image(label="Histogram equalized img"),  # histogram equalizing
     gr.Number(label="psnr value"),  # psnr value
-    gr.Image(label="kapur_segmentation"),  # segmentation Kapur method
-    gr.Image(label="otsu_segmentation"),  # segmentation Otsu method
+    gr.Image(label="Kapur segmentation"),  # segmentation Kapur method
+    gr.Image(label="Otsu segmentation"),  # segmentation Otsu method
     gr.Textbox(label="Metrics accuracy, specificity, sensitivity respectively"),  # metrics
 ]
 
-iface = gr.Interface(fn=main_function, inputs=inputs, outputs=outputs)
+iface = gr.Interface(fn=image_processing, inputs=inputs, outputs=outputs)
 iface.launch()
