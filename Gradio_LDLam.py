@@ -111,11 +111,15 @@ def image_processing(img, original_mask, kernel_sz):
     otsu_seg_mask = otsu_segment(img)
     otsu_img = cv2.cvtColor((otsu_seg_mask * 255).astype(np.uint8), cv2.COLOR_GRAY2BGR)
 
-    # metrics calculation
-    sens, spec, acc = calculate_metrics(otsu_seg_mask, original_mask)
-    metric_overall = f'Otsu metrics: \nSensitivity: {sens:.2f} \nSpecificity: {spec:.2f} \nAccurarcy: {acc:.2f}'
+    # Kapur segmentation evaluation
+    kapur_sensitivity, kapur_speciality, kapur_accuracy = calculate_metrics(kapur_seg_mask, original_mask)
+    metric_kapur = f'Sensitivity: {kapur_sensitivity:.2f} \nSpecificity: {kapur_speciality:.2f} \nAccurarcy: {kapur_accuracy:.2f}'
 
-    return info, average_img, median_img, hist_equ_img, psnr, kapur_img, otsu_img, metric_overall
+    # Otsu segmentation evaluation
+    otsu_sensitivity, otsu_speciality, otsu_accuracy = calculate_metrics(otsu_seg_mask, original_mask)
+    metric_otsu = f'Sensitivity: {otsu_sensitivity:.2f} \nSpecificity: {otsu_speciality:.2f} \nAccurarcy: {otsu_accuracy:.2f}'
+
+    return info, average_img, median_img, hist_equ_img, psnr, kapur_img, metric_kapur, otsu_img, metric_otsu
 
 inputs = [
     gr.Image(type='numpy', label="Input original image"),
@@ -127,10 +131,11 @@ outputs = [
     gr.Image(label="Average filtering"),  # avg filtering
     gr.Image(label="Median filtering"),  # median filtering
     gr.Image(label="Histogram equalized img"),  # histogram equalizing
-    gr.Number(label="psnr value"),  # psnr value
+    gr.Number(label="PSNR value"),  # psnr value
     gr.Image(label="Kapur segmentation"),  # segmentation Kapur method
+    gr.Textbox(label="Evaluation metrics (Kapur)"),  # Kapur metric
     gr.Image(label="Otsu segmentation"),  # segmentation Otsu method
-    gr.Textbox(label="Metrics accuracy, specificity, sensitivity respectively"),  # metrics
+    gr.Textbox(label="Evaluation metrics (Otsu)"),  # Otsu metrics
 ]
 
 iface = gr.Interface(fn=image_processing, inputs=inputs, outputs=outputs)
